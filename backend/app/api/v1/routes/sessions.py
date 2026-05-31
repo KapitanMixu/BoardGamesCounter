@@ -22,3 +22,10 @@ async def get_session(session_id: int):
 @router.post("/", response_model=GameSessionOut, status_code=201)
 async def create_session(data: GameSessionCreate):
     return await session_service.create_session(data)
+
+
+@router.delete("/{session_id}", status_code=204)
+async def delete_session(session_id: int):
+    deleted = await session_service.delete_session(session_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Session not found")

@@ -18,7 +18,7 @@ class Score(Model):
     id = fields.IntField(primary_key=True)
     session = fields.ForeignKeyField("models.GameSession", related_name="scores")
     player = fields.ForeignKeyField("models.Player", related_name="scores")
-    points = fields.IntField()
+    points = fields.IntField(null=True)
     winner = fields.BooleanField(default=False)
 
     class Meta:

@@ -4,6 +4,5 @@ __pycache__
 *.pyd
 .env
 db.sqlite3
-migrations
 tests
 .pytest_cache

@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from pydantic import BaseModel, Field, model_validator
 
 
@@ -18,5 +20,7 @@ class GameOut(BaseModel):
     name: str
     min_players: int
     max_players: int
+    times_played: int = 0
+    last_played_at: datetime | None = None
 
     model_config = {"from_attributes": True}

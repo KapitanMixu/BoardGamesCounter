@@ -70,3 +70,56 @@ async def test_delete_game(client: AsyncClient):
 async def test_delete_game_not_found(client: AsyncClient):
     r = await client.delete("/api/v1/games/9999")
     assert r.status_code == 404
+
+
+async def test_new_game_has_zero_times_played(client: AsyncClient):
+    r = await client.post("/api/v1/games/", json={"name": "Catan"})
+    assert r.status_code == 201
+    data = r.json()
+    assert data["times_played"] == 0
+    assert data["last_played_at"] is None
+
+
+async def test_times_played_increments_after_session(client: AsyncClient):
+    game_r = await client.post("/api/v1/games/", json={"name": "Catan"})
+    game_id = game_r.json()["id"]
+
+    await client.post("/api/v1/sessions/", json={"game_id": game_id})
+
+    r = await client.get(f"/api/v1/games/{game_id}")
+    assert r.json()["times_played"] == 1
+
+
+async def test_times_played_counts_multiple_sessions(client: AsyncClient):
+    game_r = await client.post("/api/v1/games/", json={"name": "Catan"})
+    game_id = game_r.json()["id"]
+
+    await client.post("/api/v1/sessions/", json={"game_id": game_id})
+    await client.post("/api/v1/sessions/", json={"game_id": game_id})
+    await client.post("/api/v1/sessions/", json={"game_id": game_id})
+
+    r = await client.get(f"/api/v1/games/{game_id}")
+    assert r.json()["times_played"] == 3
+
+
+async def test_last_played_at_set_after_session(client: AsyncClient):
+    game_r = await client.post("/api/v1/games/", json={"name": "Catan"})
+    game_id = game_r.json()["id"]
+
+    await client.post("/api/v1/sessions/", json={"game_id": game_id})
+
+    r = await client.get(f"/api/v1/games/{game_id}")
+    assert r.json()["last_played_at"] is not None
+
+
+async def test_times_played_isolated_per_game(client: AsyncClient):
+    g1 = (await client.post("/api/v1/games/", json={"name": "A"})).json()["id"]
+    g2 = (await client.post("/api/v1/games/", json={"name": "B"})).json()["id"]
+
+    await client.post("/api/v1/sessions/", json={"game_id": g1})
+    await client.post("/api/v1/sessions/", json={"game_id": g1})
+
+    r1 = await client.get(f"/api/v1/games/{g1}")
+    r2 = await client.get(f"/api/v1/games/{g2}")
+    assert r1.json()["times_played"] == 2
+    assert r2.json()["times_played"] == 0

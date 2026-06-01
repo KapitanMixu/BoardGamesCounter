@@ -50,8 +50,9 @@ BoardGamesCounter/
 │   │       ├── players.py
 │   │       └── sessions.py
 │   ├── tests/                pytest test suite
-│   ├── migrations/           aerich DB migrations (to be created)
-│   ├── requirements.txt      Python dependencies
+│   ├── migrations/           aerich DB migrations
+│   ├── requirements.txt      Python dependencies (prod)
+│   ├── requirements-dev.txt  Python dependencies (dev + test)
 │   ├── pyproject.toml        aerich config
 │   └── .env.example          Example env vars
 ├── main.py                   Unused PyCharm stub — ignore
@@ -78,28 +79,28 @@ Run migrations:
 
 ## Deployment Plan
 
-Target: free hosting via **Render** (render.com).
+Target: **Render** (web service, free tier) + **Neon.tech** (PostgreSQL, free tier).
 
-### Why Render
-- Free tier supports Docker containers
-- Free PostgreSQL (90 days, then cheap)
-- Native GitHub Actions integration — push to `main` triggers deploy
-- No credit card required for free tier
+### Why Render + Neon
+- Render free: Docker containers, no credit card, cold start ~1min after inactivity (acceptable — app used ~once/2 weeks)
+- Neon free: PostgreSQL 0.5GB, **no expiry, no pause** — unlike Render PG (30-day expiry) or Supabase (pauses after 1 week)
+- Both free, no credit card required
 
-### Docker plan
+### Docker
 - `backend/Dockerfile` — multi-stage build (build deps → slim runtime)
-- `docker-compose.yml` — local dev with PostgreSQL container
+- `docker-compose.yml` — local dev with PostgreSQL 16 container
 - `.dockerignore` — exclude `.venv/`, `__pycache__/`, `.env`
+- `backend/entrypoint.sh` — runs `aerich upgrade` then starts uvicorn
 
-### GitHub Actions plan
-- `.github/workflows/ci.yml` — run tests on every PR
-- `.github/workflows/deploy.yml` — deploy to Render on push to `main`
+### GitHub Actions
+- `.github/workflows/ci.yml` — run tests on every push/PR to master
+- `.github/workflows/deploy.yml` — deploy to Render on push to `master` (TODO)
 - Render deploy hook URL stored as GitHub secret `RENDER_DEPLOY_HOOK`
 
 ### Status
 - [x] Dockerfile (`backend/Dockerfile`, multi-stage, python:3.13-slim)
 - [x] docker-compose.yml (local dev with PostgreSQL 16)
-- [ ] GitHub Actions CI (tests)
-- [ ] GitHub Actions CD (Render deploy)
+- [x] GitHub Actions CI (tests via pytest)
+- [ ] GitHub Actions CD (Render deploy hook)
 - [ ] Render service setup
-- [ ] PostgreSQL migration in prod
+- [ ] Neon PostgreSQL setup + DATABASE_URL secret

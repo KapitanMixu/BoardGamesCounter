@@ -4,7 +4,10 @@ import pytest
 from httpx import AsyncClient, ASGITransport
 from tortoise import Tortoise
 
+from app.auth import get_current_user
 from app.main import app
+
+app.dependency_overrides[get_current_user] = lambda: "testuser"
 
 TEST_DB_URL = "sqlite://:memory:"
 

@@ -8,6 +8,12 @@ class Settings(BaseSettings):
     DATABASE_URL: str = "sqlite://./db.sqlite3"
     TORTOISE_ORM: dict = {}
 
+    JWT_SECRET: str = "change-me-in-production"
+    JWT_ALGORITHM: str = "HS256"
+    JWT_EXPIRE_MINUTES: int = 60
+    API_USERNAME: str = "admin"
+    API_PASSWORD: str = "changeme"
+
     @model_validator(mode="after")
     def build_tortoise_orm(self) -> "Settings":
         self.TORTOISE_ORM = {

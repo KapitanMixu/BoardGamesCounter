@@ -1,6 +1,6 @@
-from datetime import datetime
+from datetime import date, datetime
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 
 class GameCreate(BaseModel):
@@ -21,6 +21,15 @@ class GameOut(BaseModel):
     min_players: int
     max_players: int
     times_played: int = 0
-    last_played_at: datetime | None = None
+    last_played_at: date | None = None
+
+    @field_validator("last_played_at", mode="before")
+    @classmethod
+    def coerce_to_date(cls, v: object) -> date | None:
+        if isinstance(v, datetime):
+            return v.date()
+        if isinstance(v, str):
+            return datetime.fromisoformat(v).date()
+        return v
 
     model_config = {"from_attributes": True}

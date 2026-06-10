@@ -71,6 +71,21 @@ body {
 
 .app-header h1 { font-size: 1.5rem; }
 
+/* nav */
+.app-nav { display: flex; gap: 0.5rem; }
+
+.nav-link {
+  padding: 0.4rem 0.9rem;
+  border-radius: 4px;
+  color: #374151;
+  text-decoration: none;
+  font-size: 0.95rem;
+  transition: background 0.15s;
+}
+
+.nav-link:hover { background: #e5e7eb; }
+.nav-link.active { background: #3b82f6; color: white; }
+
 /* buttons */
 button {
   padding: 0.6rem 1.2rem;
@@ -112,6 +127,130 @@ button:disabled { background: #93c5fd; cursor: not-allowed; }
   gap: 1.5rem;
   font-size: 0.85rem;
   color: #6b7280;
+}
+
+/* add game form */
+.add-game-form {
+  background: white;
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  margin-bottom: 1.5rem;
+}
+
+.add-game-form h3 { margin-bottom: 0.75rem; font-size: 1rem; color: #374151; }
+
+.form-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.form-row input[type="text"] {
+  flex: 1;
+  min-width: 160px;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+.form-row input[type="text"]:focus {
+  outline: 2px solid #3b82f6;
+  border-color: transparent;
+}
+
+.form-row label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.8rem;
+  color: #555;
+}
+
+.form-row label input[type="number"] {
+  width: 80px;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+.form-row select {
+  padding: 0.6rem 0.8rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+  background: white;
+}
+
+.form-row select:disabled { color: #9ca3af; }
+
+.form-error { margin-top: 0.5rem; font-size: 0.85rem; color: #ef4444; }
+
+/* add inline form (players) */
+.add-inline-form {
+  background: white;
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  margin-bottom: 1.5rem;
+}
+
+.add-inline-form h3 { margin-bottom: 0.75rem; font-size: 1rem; color: #374151; }
+
+/* player list */
+.player-list h2 { margin-bottom: 1rem; }
+.player-list ul { list-style: none; display: flex; flex-direction: column; gap: 0.5rem; }
+
+.player-card {
+  background: white;
+  border-radius: 8px;
+  padding: 0.85rem 1.25rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+.player-name { font-weight: 600; }
+
+/* session list */
+.session-list h2 { margin-bottom: 1rem; }
+.session-list ul { list-style: none; display: flex; flex-direction: column; gap: 0.75rem; }
+
+.session-card {
+  background: white;
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+.session-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.session-game { font-weight: 600; }
+.session-date { font-size: 0.85rem; color: #6b7280; }
+.session-notes { font-size: 0.85rem; color: #6b7280; margin-bottom: 0.5rem; }
+
+.score-list { list-style: none; display: flex; flex-direction: column; gap: 0.25rem; margin-top: 0.5rem; }
+
+.score-item {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.9rem;
+  color: #374151;
+}
+
+.score-item.winner { font-weight: 600; }
+
+.winner-badge {
+  background: #fef3c7;
+  color: #d97706;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
 }
 
 /* utils */

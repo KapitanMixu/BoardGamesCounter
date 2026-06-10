@@ -59,6 +59,86 @@ BoardGamesCounter/
 └── .venv/                    Python 3.14 virtual environment
 ```
 
+## Frontend (React + Vite)
+
+### Running
+
+```powershell
+cd frontend
+npm run dev      # dev server na http://localhost:5173
+npm run build    # produkcyjny build do frontend/dist/
+```
+
+### Architektura
+
+```
+frontend/src/
+├── api/
+│   └── client.ts          fetch wrapper: auth header, token storage, typed interfaces
+├── components/
+│   ├── LoginForm.tsx       formularz logowania (POST /auth/token)
+│   └── GameList.tsx        lista gier z API (GET /api/v1/games/)
+├── App.tsx                 root: sprawdza token → LoginForm lub główny widok
+├── App.css                 wszystkie style (brak biblioteki UI)
+└── main.tsx                punkt wejścia, montuje <App /> do index.html
+```
+
+### Proxy (vite.config.ts)
+
+Vite proxy przekazuje requesty do backendu (port 8000):
+- `/api/*` → `http://localhost:8000/api/*`
+- `/auth/*` → `http://localhost:8000/auth/*`
+
+Dzięki temu `fetch('/api/v1/games/')` w kodzie React działa bez hardcoded URL.
+
+### Kluczowe koncepty React użyte w projekcie
+
+**Komponent** — funkcja TypeScript która zwraca JSX (HTML-like składnia). Np.:
+```tsx
+function GameList() {
+  return <ul>...</ul>
+}
+```
+
+**Props** — dane przekazywane do komponentu z zewnątrz (jak argumenty funkcji):
+```tsx
+<LoginForm onLogin={() => setLoggedIn(true)} />
+//         ^^^ prop typu funkcja (callback)
+```
+
+**useState** — hook do przechowywania stanu lokalnego komponentu. Zmiana stanu = re-render:
+```tsx
+const [games, setGames] = useState<Game[]>([])
+// games = obecna wartość, setGames = funkcja do zmiany
+```
+
+**useEffect** — hook do efektów ubocznych (fetch, timery, subskrypcje). Drugi argument `[]` = uruchom raz po mount:
+```tsx
+useEffect(() => {
+  api.games.list().then(setGames)
+}, [])  // [] = dependency array — puste = tylko przy mount
+```
+
+**useState z inicjalizatorem** — funkcja zamiast wartości, wykonuje się raz:
+```tsx
+const [loggedIn, setLoggedIn] = useState(() => getToken() !== null)
+// lepsza wersja niż useState(getToken() !== null) — ta wywoła getToken() przy każdym render
+```
+
+**import type** — TypeScript-only import, znika w runtime (ważne w Vite/ESM):
+```tsx
+import { api, type Game } from '../api/client'
+// Game to interface = istnieje tylko w TS, nie w JS
+```
+
+### Auth flow
+
+1. `App.tsx` sprawdza `localStorage.getItem('token')` przy starcie
+2. Brak tokenu → `<LoginForm />` — POST `/auth/token` → token w `localStorage`
+3. Token istnieje → główny widok
+4. `client.ts` dodaje `Authorization: Bearer <token>` do każdego request
+5. 401 z API → `clearToken()` + rzuca Error → komponent pokazuje błąd / wymusza re-login
+
 ## Database
 
 - ORM: Tortoise ORM (async)

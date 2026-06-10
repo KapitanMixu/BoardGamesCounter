@@ -123,3 +123,37 @@ async def test_times_played_isolated_per_game(client: AsyncClient):
     r2 = await client.get(f"/api/v1/games/{g2}")
     assert r1.json()["times_played"] == 2
     assert r2.json()["times_played"] == 0
+
+
+async def test_create_game_with_total_duration(client: AsyncClient):
+    r = await client.post("/api/v1/games/", json={"name": "Catan", "duration_minutes": 90, "duration_type": "total"})
+    assert r.status_code == 201
+    data = r.json()
+    assert data["duration_minutes"] == 90
+    assert data["duration_type"] == "total"
+
+
+async def test_create_game_with_per_player_duration(client: AsyncClient):
+    r = await client.post("/api/v1/games/", json={"name": "Chess", "duration_minutes": 20, "duration_type": "per_player"})
+    assert r.status_code == 201
+    data = r.json()
+    assert data["duration_minutes"] == 20
+    assert data["duration_type"] == "per_player"
+
+
+async def test_create_game_without_duration(client: AsyncClient):
+    r = await client.post("/api/v1/games/", json={"name": "Go"})
+    assert r.status_code == 201
+    data = r.json()
+    assert data["duration_minutes"] is None
+    assert data["duration_type"] is None
+
+
+async def test_create_game_duration_without_type_fails(client: AsyncClient):
+    r = await client.post("/api/v1/games/", json={"name": "X", "duration_minutes": 60})
+    assert r.status_code == 422
+
+
+async def test_create_game_invalid_duration_type_fails(client: AsyncClient):
+    r = await client.post("/api/v1/games/", json={"name": "X", "duration_minutes": 60, "duration_type": "unknown"})
+    assert r.status_code == 422

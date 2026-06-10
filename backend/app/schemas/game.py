@@ -7,11 +7,15 @@ class GameCreate(BaseModel):
     name: str
     min_players: int = Field(default=2, ge=1)
     max_players: int = Field(default=4, ge=1)
+    duration_minutes: int | None = Field(default=None, ge=1)
+    duration_type: str | None = None
 
     @model_validator(mode="after")
-    def min_le_max(self) -> "GameCreate":
+    def validate(self) -> "GameCreate":
         if self.min_players > self.max_players:
             raise ValueError("min_players must be <= max_players")
+        if self.duration_minutes is not None and self.duration_type not in ("total", "per_player"):
+            raise ValueError("duration_type must be 'total' or 'per_player'")
         return self
 
 
@@ -20,6 +24,8 @@ class GameOut(BaseModel):
     name: str
     min_players: int
     max_players: int
+    duration_minutes: int | None = None
+    duration_type: str | None = None
     times_played: int = 0
     last_played_at: date | None = None
 

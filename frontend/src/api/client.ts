@@ -38,17 +38,83 @@ export async function login(username: string, password: string): Promise<string>
   return data.access_token
 }
 
+export type DurationType = 'total' | 'per_player'
+
 export interface Game {
   id: number
   name: string
   min_players: number
   max_players: number
+  duration_minutes: number | null
+  duration_type: DurationType | null
   times_played: number
   last_played_at: string | null
+}
+
+export interface GameCreate {
+  name: string
+  min_players: number
+  max_players: number
+  duration_minutes?: number | null
+  duration_type?: DurationType | null
+}
+
+export interface Player {
+  id: number
+  name: string
+}
+
+export interface PlayerCreate {
+  name: string
+}
+
+export interface Score {
+  id: number
+  player: Player
+  points: number | null
+  winner: boolean
+}
+
+export interface ScoreCreate {
+  player_id: number
+  points?: number | null
+  winner?: boolean
+}
+
+export interface GameSession {
+  id: number
+  game_id: number
+  played_at: string
+  notes: string | null
+  scores: Score[]
+}
+
+export interface GameSessionCreate {
+  game_id: number
+  notes?: string | null
+  scores?: ScoreCreate[]
 }
 
 export const api = {
   games: {
     list: () => request<Game[]>('/games/'),
+    create: (data: GameCreate) => request<Game>('/games/', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  },
+  players: {
+    list: () => request<Player[]>('/players/'),
+    create: (data: PlayerCreate) => request<Player>('/players/', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  },
+  sessions: {
+    list: () => request<GameSession[]>('/sessions/'),
+    create: (data: GameSessionCreate) => request<GameSession>('/sessions/', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
   },
 }

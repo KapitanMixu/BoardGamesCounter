@@ -29,7 +29,7 @@ def anyio_backend():
 async def init_db():
     await Tortoise.init(
         db_url=TEST_DB_URL,
-        modules={"models": ["app.models.game", "app.models.player", "app.models.session"]},
+        modules={"models": ["app.models.game", "app.models.player", "app.models.session", "app.models.expansion"]},
     )
     await Tortoise.generate_schemas()
     yield
@@ -43,9 +43,11 @@ async def clean_db(init_db):
     from app.models.player import Player
     from app.models.game import Game
 
+    from app.models.expansion import Expansion
     await Score.all().delete()
     await GameSession.all().delete()
     await Player.all().delete()
+    await Expansion.all().delete()
     await Game.all().delete()
 
 

@@ -5,6 +5,7 @@ from tortoise.models import Model
 class GameSession(Model):
     id = fields.IntField(primary_key=True)
     game = fields.ForeignKeyField("models.Game", related_name="sessions")
+    name = fields.CharField(max_length=255, null=True)
     played_at = fields.DatetimeField(auto_now_add=True)
     notes = fields.TextField(null=True)
 

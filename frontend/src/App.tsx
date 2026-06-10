@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, NavLink, Navigate } from 'react-router-do
 import { clearToken, getToken } from './api/client'
 import LoginForm from './components/LoginForm'
 import GameList from './components/GameList'
+import GameDetail from './components/GameDetail'
 import PlayerList from './components/PlayerList'
 import SessionList from './components/SessionList'
 import './App.css'
@@ -35,6 +36,7 @@ export default function App() {
           <Routes>
             <Route path="/" element={<Navigate to="/games" replace />} />
             <Route path="/games" element={<GameList />} />
+            <Route path="/games/:id" element={<GameDetail />} />
             <Route path="/players" element={<PlayerList />} />
             <Route path="/sessions" element={<SessionList />} />
           </Routes>

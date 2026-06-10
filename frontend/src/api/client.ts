@@ -84,6 +84,7 @@ export interface ScoreCreate {
 export interface GameSession {
   id: number
   game_id: number
+  name: string | null
   played_at: string
   notes: string | null
   scores: Score[]
@@ -91,17 +92,29 @@ export interface GameSession {
 
 export interface GameSessionCreate {
   game_id: number
+  name?: string | null
   notes?: string | null
   scores?: ScoreCreate[]
+}
+
+export interface Expansion {
+  id: number
+  name: string
+}
+
+export interface ExpansionCreate {
+  name: string
 }
 
 export const api = {
   games: {
     list: () => request<Game[]>('/games/'),
+    get: (id: number) => request<Game>(`/games/${id}`),
     create: (data: GameCreate) => request<Game>('/games/', {
       method: 'POST',
       body: JSON.stringify(data),
     }),
+    sessions: (id: number) => request<GameSession[]>(`/games/${id}/sessions/`),
   },
   players: {
     list: () => request<Player[]>('/players/'),
@@ -115,6 +128,16 @@ export const api = {
     create: (data: GameSessionCreate) => request<GameSession>('/sessions/', {
       method: 'POST',
       body: JSON.stringify(data),
+    }),
+  },
+  expansions: {
+    list: (gameId: number) => request<Expansion[]>(`/games/${gameId}/expansions/`),
+    create: (gameId: number, data: ExpansionCreate) => request<Expansion>(`/games/${gameId}/expansions/`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+    delete: (gameId: number, expansionId: number) => request<void>(`/games/${gameId}/expansions/${expansionId}`, {
+      method: 'DELETE',
     }),
   },
 }

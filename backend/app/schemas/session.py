@@ -13,6 +13,7 @@ class ScoreCreate(BaseModel):
 
 class GameSessionCreate(BaseModel):
     game_id: int
+    name: str | None = None
     notes: str | None = None
     scores: list[ScoreCreate] = []
 
@@ -29,6 +30,7 @@ class ScoreOut(BaseModel):
 class GameSessionOut(BaseModel):
     id: int
     game_id: int
+    name: str | None
     played_at: date
     notes: str | None
     scores: list[ScoreOut] = []

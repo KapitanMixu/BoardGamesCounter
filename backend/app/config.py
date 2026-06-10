@@ -24,6 +24,7 @@ class Settings(BaseSettings):
                         "app.models.game",
                         "app.models.player",
                         "app.models.session",
+                        "app.models.expansion",
                         "aerich.models",
                     ],
                     "default_connection": "default",

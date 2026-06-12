@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { api, type Game, type GameSession, type Expansion, type Player } from '../api/client'
+import { api, type Game, type GameSession, type Expansion, type Player, type DurationType } from '../api/client'
 
 interface PlayerStat {
   name: string
@@ -38,10 +38,21 @@ export default function GameDetail() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
+  // game edit
+  const [gameEditOpen, setGameEditOpen] = useState(false)
+  const [editName, setEditName] = useState('')
+  const [editMinPlayers, setEditMinPlayers] = useState('')
+  const [editMaxPlayers, setEditMaxPlayers] = useState('')
+  const [editDurationMinutes, setEditDurationMinutes] = useState('')
+  const [editDurationType, setEditDurationType] = useState<DurationType | ''>('')
+  const [gameEditSaving, setGameEditSaving] = useState(false)
+
   // expansions
   const [newExpName, setNewExpName] = useState('')
   const [addExpOpen, setAddExpOpen] = useState(false)
   const [expSubmitting, setExpSubmitting] = useState(false)
+  const [editingExpId, setEditingExpId] = useState<number | null>(null)
+  const [editExpName, setEditExpName] = useState('')
 
   // new session form
   const [sessionFormOpen, setSessionFormOpen] = useState(false)
@@ -52,6 +63,12 @@ export default function GameDetail() {
   const [sessionError, setSessionError] = useState<string | null>(null)
   const [newPlayerName, setNewPlayerName] = useState('')
   const [addingPlayer, setAddingPlayer] = useState(false)
+
+  // session edit
+  const [editingSessionId, setEditingSessionId] = useState<number | null>(null)
+  const [editSessionName, setEditSessionName] = useState('')
+  const [editSessionNotes, setEditSessionNotes] = useState('')
+  const [sessionEditSaving, setSessionEditSaving] = useState(false)
 
   useEffect(() => {
     Promise.all([
@@ -64,6 +81,34 @@ export default function GameDetail() {
       .catch(err => setError(err.message))
       .finally(() => setLoading(false))
   }, [gameId])
+
+  function openGameEdit() {
+    if (!game) return
+    setEditName(game.name)
+    setEditMinPlayers(String(game.min_players))
+    setEditMaxPlayers(String(game.max_players))
+    setEditDurationMinutes(game.duration_minutes != null ? String(game.duration_minutes) : '')
+    setEditDurationType(game.duration_type ?? '')
+    setGameEditOpen(true)
+  }
+
+  async function handleGameEdit(e: React.FormEvent) {
+    e.preventDefault()
+    setGameEditSaving(true)
+    try {
+      const updated = await api.games.update(gameId, {
+        name: editName.trim() || undefined,
+        min_players: editMinPlayers ? Number(editMinPlayers) : undefined,
+        max_players: editMaxPlayers ? Number(editMaxPlayers) : undefined,
+        duration_minutes: editDurationMinutes ? Number(editDurationMinutes) : null,
+        duration_type: editDurationType || null,
+      })
+      setGame(updated)
+      setGameEditOpen(false)
+    } finally {
+      setGameEditSaving(false)
+    }
+  }
 
   async function handleAddExpansion(e: React.FormEvent) {
     e.preventDefault()
@@ -82,6 +127,19 @@ export default function GameDetail() {
   async function handleDeleteExpansion(expId: number) {
     await api.expansions.delete(gameId, expId)
     setExpansions(prev => prev.filter(e => e.id !== expId))
+  }
+
+  function openExpEdit(exp: Expansion) {
+    setEditingExpId(exp.id)
+    setEditExpName(exp.name)
+  }
+
+  async function handleExpEdit(expId: number) {
+    const name = editExpName.trim()
+    if (!name) { setEditingExpId(null); return }
+    const updated = await api.expansions.update(gameId, expId, { name })
+    setExpansions(prev => prev.map(e => e.id === expId ? updated : e))
+    setEditingExpId(null)
   }
 
   async function handleAddNewPlayer() {
@@ -137,6 +195,28 @@ export default function GameDetail() {
     }
   }
 
+  function openSessionEdit(s: GameSession) {
+    setEditingSessionId(s.id)
+    setEditSessionName(s.name ?? '')
+    setEditSessionNotes(s.notes ?? '')
+  }
+
+  async function handleSessionEdit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!editingSessionId) return
+    setSessionEditSaving(true)
+    try {
+      const updated = await api.sessions.update(editingSessionId, {
+        name: editSessionName.trim() || null,
+        notes: editSessionNotes.trim() || null,
+      })
+      setSessions(prev => prev.map(s => s.id === editingSessionId ? updated : s))
+      setEditingSessionId(null)
+    } finally {
+      setSessionEditSaving(false)
+    }
+  }
+
   if (loading) return <p className="status">Ładowanie...</p>
   if (error) return <p className="status error">Błąd: {error}</p>
   if (!game) return <p className="status error">Nie znaleziono gry</p>
@@ -148,15 +228,56 @@ export default function GameDetail() {
       <Link to="/games" className="back-link">← Wróć do listy</Link>
 
       <div className="detail-header">
-        <h2>{game.name}</h2>
-        <div className="game-meta">
-          <span>{game.min_players}–{game.max_players} graczy</span>
-          {game.duration_minutes && game.duration_type && (
-            <span>{game.duration_minutes} min{game.duration_type === 'per_player' ? '/gracza' : ''}</span>
-          )}
-          <span>{sessions.length} rozgrywek</span>
-          <span>ostatnio: {game.last_played_at ?? 'nigdy'}</span>
-        </div>
+        {gameEditOpen ? (
+          <form className="game-edit-form" onSubmit={handleGameEdit}>
+            <div className="form-row">
+              <input
+                type="text"
+                value={editName}
+                onChange={e => setEditName(e.target.value)}
+                placeholder="Nazwa gry"
+                required
+              />
+            </div>
+            <div className="form-row">
+              <label>Min graczy
+                <input type="number" value={editMinPlayers} onChange={e => setEditMinPlayers(e.target.value)} min={1} style={{ width: '4rem', marginLeft: '0.5rem' }} />
+              </label>
+              <label>Max graczy
+                <input type="number" value={editMaxPlayers} onChange={e => setEditMaxPlayers(e.target.value)} min={1} style={{ width: '4rem', marginLeft: '0.5rem' }} />
+              </label>
+            </div>
+            <div className="form-row">
+              <label>Czas (min)
+                <input type="number" value={editDurationMinutes} onChange={e => setEditDurationMinutes(e.target.value)} min={1} style={{ width: '5rem', marginLeft: '0.5rem' }} />
+              </label>
+              <select value={editDurationType} onChange={e => setEditDurationType(e.target.value as DurationType | '')}>
+                <option value="">brak</option>
+                <option value="total">łącznie</option>
+                <option value="per_player">na gracza</option>
+              </select>
+            </div>
+            <div className="form-row" style={{ marginTop: '0.5rem' }}>
+              <button type="submit" disabled={gameEditSaving}>{gameEditSaving ? 'Zapisywanie...' : 'Zapisz'}</button>
+              <button type="button" className="btn-cancel" onClick={() => setGameEditOpen(false)}>Anuluj</button>
+            </div>
+          </form>
+        ) : (
+          <>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <h2>{game.name}</h2>
+              <button className="btn-edit-inline" onClick={openGameEdit} title="Edytuj grę">✎</button>
+            </div>
+            <div className="game-meta">
+              <span>{game.min_players}–{game.max_players} graczy</span>
+              {game.duration_minutes && game.duration_type && (
+                <span>{game.duration_minutes} min{game.duration_type === 'per_player' ? '/gracza' : ''}</span>
+              )}
+              <span>{sessions.length} rozgrywek</span>
+              <span>ostatnio: {game.last_played_at ?? 'nigdy'}</span>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Dodatki */}
@@ -166,8 +287,26 @@ export default function GameDetail() {
           <ul className="expansion-list" style={{ marginBottom: '0.75rem' }}>
             {expansions.map(exp => (
               <li key={exp.id} className="expansion-item">
-                <span>{exp.name}</span>
-                <button className="btn-delete" onClick={() => handleDeleteExpansion(exp.id)}>×</button>
+                {editingExpId === exp.id ? (
+                  <>
+                    <input
+                      type="text"
+                      value={editExpName}
+                      onChange={e => setEditExpName(e.target.value)}
+                      onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleExpEdit(exp.id) } if (e.key === 'Escape') setEditingExpId(null) }}
+                      autoFocus
+                      className="expansion-edit-input"
+                    />
+                    <button className="btn-save-inline" onClick={() => handleExpEdit(exp.id)}>✓</button>
+                    <button className="btn-cancel-inline" onClick={() => setEditingExpId(null)}>✕</button>
+                  </>
+                ) : (
+                  <>
+                    <span>{exp.name}</span>
+                    <button className="btn-edit-inline" onClick={() => openExpEdit(exp)} title="Edytuj">✎</button>
+                    <button className="btn-delete" onClick={() => handleDeleteExpansion(exp.id)}>×</button>
+                  </>
+                )}
               </li>
             ))}
           </ul>
@@ -313,21 +452,50 @@ export default function GameDetail() {
           <ul className="session-history">
             {sessions.map(s => (
               <li key={s.id} className="session-history-item">
-                <div className="session-history-date">
-                  <span className="session-name">{s.name ?? `Rozgrywka#${sessions.length - sessions.indexOf(s)}`}</span>
-                  <span className="session-date-sub">{s.played_at}</span>
-                </div>
-                {s.notes && <p className="session-notes">{s.notes}</p>}
-                {s.scores.length > 0 && (
-                  <ul className="score-list">
-                    {s.scores.map(score => (
-                      <li key={score.id} className={`score-item${score.winner ? ' winner' : ''}`}>
-                        <span>{score.player.name}</span>
-                        {score.points != null && <span>{score.points} pkt</span>}
-                        {score.winner && <span className="winner-badge">Zwycięzca</span>}
-                      </li>
-                    ))}
-                  </ul>
+                {editingSessionId === s.id ? (
+                  <form className="session-edit-form" onSubmit={handleSessionEdit}>
+                    <input
+                      type="text"
+                      value={editSessionName}
+                      onChange={e => setEditSessionName(e.target.value)}
+                      placeholder="Nazwa rozgrywki"
+                      className="session-notes-input"
+                    />
+                    <input
+                      type="text"
+                      value={editSessionNotes}
+                      onChange={e => setEditSessionNotes(e.target.value)}
+                      placeholder="Notatki"
+                      className="session-notes-input"
+                      style={{ marginTop: '0.4rem' }}
+                    />
+                    <div className="form-row" style={{ marginTop: '0.4rem' }}>
+                      <button type="submit" disabled={sessionEditSaving}>{sessionEditSaving ? '...' : 'Zapisz'}</button>
+                      <button type="button" className="btn-cancel" onClick={() => setEditingSessionId(null)}>Anuluj</button>
+                    </div>
+                  </form>
+                ) : (
+                  <>
+                    <div className="session-history-date">
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <span className="session-name">{s.name ?? `Rozgrywka#${sessions.length - sessions.indexOf(s)}`}</span>
+                        <button className="btn-edit-inline" onClick={() => openSessionEdit(s)} title="Edytuj">✎</button>
+                      </div>
+                      <span className="session-date-sub">{s.played_at}</span>
+                    </div>
+                    {s.notes && <p className="session-notes">{s.notes}</p>}
+                    {s.scores.length > 0 && (
+                      <ul className="score-list">
+                        {s.scores.map(score => (
+                          <li key={score.id} className={`score-item${score.winner ? ' winner' : ''}`}>
+                            <span>{score.player.name}</span>
+                            {score.points != null && <span>{score.points} pkt</span>}
+                            {score.winner && <span className="winner-badge">Zwycięzca</span>}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </>
                 )}
               </li>
             ))}

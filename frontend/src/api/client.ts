@@ -59,6 +59,14 @@ export interface GameCreate {
   duration_type?: DurationType | null
 }
 
+export interface GameUpdate {
+  name?: string
+  min_players?: number
+  max_players?: number
+  duration_minutes?: number | null
+  duration_type?: DurationType | null
+}
+
 export interface Player {
   id: number
   name: string
@@ -97,6 +105,11 @@ export interface GameSessionCreate {
   scores?: ScoreCreate[]
 }
 
+export interface GameSessionUpdate {
+  name?: string | null
+  notes?: string | null
+}
+
 export interface Expansion {
   id: number
   name: string
@@ -106,12 +119,20 @@ export interface ExpansionCreate {
   name: string
 }
 
+export interface ExpansionUpdate {
+  name?: string
+}
+
 export const api = {
   games: {
     list: () => request<Game[]>('/games/'),
     get: (id: number) => request<Game>(`/games/${id}`),
     create: (data: GameCreate) => request<Game>('/games/', {
       method: 'POST',
+      body: JSON.stringify(data),
+    }),
+    update: (id: number, data: GameUpdate) => request<Game>(`/games/${id}`, {
+      method: 'PATCH',
       body: JSON.stringify(data),
     }),
     sessions: (id: number) => request<GameSession[]>(`/games/${id}/sessions/`),
@@ -125,15 +146,25 @@ export const api = {
   },
   sessions: {
     list: () => request<GameSession[]>('/sessions/'),
+    get: (id: number) => request<GameSession>(`/sessions/${id}`),
     create: (data: GameSessionCreate) => request<GameSession>('/sessions/', {
       method: 'POST',
       body: JSON.stringify(data),
     }),
+    update: (id: number, data: GameSessionUpdate) => request<GameSession>(`/sessions/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
+    delete: (id: number) => request<void>(`/sessions/${id}`, { method: 'DELETE' }),
   },
   expansions: {
     list: (gameId: number) => request<Expansion[]>(`/games/${gameId}/expansions/`),
     create: (gameId: number, data: ExpansionCreate) => request<Expansion>(`/games/${gameId}/expansions/`, {
       method: 'POST',
+      body: JSON.stringify(data),
+    }),
+    update: (gameId: number, expansionId: number, data: ExpansionUpdate) => request<Expansion>(`/games/${gameId}/expansions/${expansionId}`, {
+      method: 'PATCH',
       body: JSON.stringify(data),
     }),
     delete: (gameId: number, expansionId: number) => request<void>(`/games/${gameId}/expansions/${expansionId}`, {

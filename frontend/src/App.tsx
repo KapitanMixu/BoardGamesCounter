@@ -6,6 +6,7 @@ import GameList from './components/GameList'
 import GameDetail from './components/GameDetail'
 import PlayerList from './components/PlayerList'
 import SessionList from './components/SessionList'
+import SessionDetail from './components/SessionDetail'
 import './App.css'
 
 export default function App() {
@@ -39,6 +40,7 @@ export default function App() {
             <Route path="/games/:id" element={<GameDetail />} />
             <Route path="/players" element={<PlayerList />} />
             <Route path="/sessions" element={<SessionList />} />
+            <Route path="/sessions/:id" element={<SessionDetail />} />
           </Routes>
         </main>
       </div>

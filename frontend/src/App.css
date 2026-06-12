@@ -194,6 +194,77 @@ button:disabled { background: #93c5fd; cursor: not-allowed; }
 
 .btn-delete:hover { color: #ef4444; background: none; }
 
+.btn-edit-inline {
+  background: none;
+  border: none;
+  color: #9ca3af;
+  cursor: pointer;
+  font-size: 0.85rem;
+  padding: 0.1rem 0.25rem;
+  line-height: 1;
+}
+.btn-edit-inline:hover { color: #60a5fa; background: none; }
+
+.btn-save-inline {
+  background: none;
+  border: none;
+  color: #34d399;
+  cursor: pointer;
+  font-size: 0.85rem;
+  padding: 0.1rem 0.3rem;
+}
+.btn-save-inline:hover { color: #10b981; background: none; }
+
+.btn-cancel-inline {
+  background: none;
+  border: none;
+  color: #9ca3af;
+  cursor: pointer;
+  font-size: 0.85rem;
+  padding: 0.1rem 0.3rem;
+}
+.btn-cancel-inline:hover { color: #ef4444; background: none; }
+
+.expansion-edit-input {
+  flex: 1;
+  padding: 0.2rem 0.4rem;
+  font-size: 0.875rem;
+  background: #374151;
+  border: 1px solid #4b5563;
+  border-radius: 4px;
+  color: #f9fafb;
+}
+
+.game-edit-form {
+  padding: 0.75rem 0;
+}
+.game-edit-form label {
+  font-size: 0.875rem;
+  color: #9ca3af;
+}
+.game-edit-form input[type="text"],
+.game-edit-form input[type="number"] {
+  background: #374151;
+  border: 1px solid #4b5563;
+  border-radius: 4px;
+  color: #f9fafb;
+  padding: 0.3rem 0.5rem;
+}
+.game-edit-form select {
+  background: #374151;
+  border: 1px solid #4b5563;
+  border-radius: 4px;
+  color: #f9fafb;
+  padding: 0.3rem 0.5rem;
+  margin-left: 0.5rem;
+}
+
+.session-edit-form {
+  display: flex;
+  flex-direction: column;
+  padding: 0.5rem 0;
+}
+
 .expansion-add-form {
   display: flex;
   gap: 0.5rem;

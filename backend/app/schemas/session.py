@@ -18,6 +18,11 @@ class GameSessionCreate(BaseModel):
     scores: list[ScoreCreate] = []
 
 
+class GameSessionUpdate(BaseModel):
+    name: str | None = None
+    notes: str | None = None
+
+
 class ScoreOut(BaseModel):
     id: int
     player: PlayerOut

@@ -213,7 +213,7 @@ export default function SessionList() {
           <li key={session.id} className="session-card">
             <div className="session-header">
               <div>
-                <span className="session-name">{session.name ?? `Sesja #${session.id}`}</span>
+                <Link to={`/sessions/${session.id}`} className="session-name">{session.name ?? `Sesja #${session.id}`}</Link>
                 <span className="session-game-link">
                   {gamesMap[session.game_id]
                     ? <Link to={`/games/${session.game_id}`}>{gamesMap[session.game_id].name}</Link>

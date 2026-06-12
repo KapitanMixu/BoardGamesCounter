@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 
-from app.schemas.game import GameCreate, GameOut
+from app.schemas.game import GameCreate, GameOut, GameUpdate
 from app.services import game as game_service
 
 router = APIRouter()
@@ -22,6 +22,14 @@ async def get_game(game_id: int):
 @router.post("/", response_model=GameOut, status_code=201)
 async def create_game(data: GameCreate):
     return await game_service.create_game(data)
+
+
+@router.patch("/{game_id}", response_model=GameOut)
+async def update_game(game_id: int, data: GameUpdate):
+    game = await game_service.update_game(game_id, data)
+    if not game:
+        raise HTTPException(status_code=404, detail="Game not found")
+    return game
 
 
 @router.delete("/{game_id}", status_code=204)

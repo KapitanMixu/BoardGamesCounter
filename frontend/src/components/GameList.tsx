@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { api, type Game, type DurationType, type Expansion } from '../api/client'
+import { api, type Game, type DurationType, type Expansion, type ExpansionUpdate } from '../api/client'
 import AddGameForm from './AddGameForm'
 
 function formatDuration(minutes: number, type: DurationType): string {
@@ -19,6 +19,8 @@ function GameCard({ game }: GameCardProps) {
   const [expError, setExpError] = useState<string | null>(null)
   const [newExpName, setNewExpName] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [editingExpId, setEditingExpId] = useState<number | null>(null)
+  const [editExpName, setEditExpName] = useState('')
 
   async function handleToggle() {
     if (!open && expansions.length === 0) {
@@ -54,6 +56,14 @@ function GameCard({ game }: GameCardProps) {
     setExpansions(prev => prev.filter(e => e.id !== expansionId))
   }
 
+  async function handleEditExpansion(expansionId: number) {
+    const name = editExpName.trim()
+    if (!name) { setEditingExpId(null); return }
+    const updated = await api.expansions.update(game.id, expansionId, { name } as ExpansionUpdate)
+    setExpansions(prev => prev.map(e => e.id === expansionId ? updated : e))
+    setEditingExpId(null)
+  }
+
   return (
     <li className={`game-card${open ? ' expanded' : ''}`}>
       <div className="game-card-header">
@@ -83,12 +93,26 @@ function GameCard({ game }: GameCardProps) {
                 )}
                 {expansions.map(exp => (
                   <li key={exp.id} className="expansion-item">
-                    <span>{exp.name}</span>
-                    <button
-                      className="btn-delete"
-                      onClick={() => handleDeleteExpansion(exp.id)}
-                      title="Usuń"
-                    >×</button>
+                    {editingExpId === exp.id ? (
+                      <>
+                        <input
+                          type="text"
+                          value={editExpName}
+                          onChange={e => setEditExpName(e.target.value)}
+                          onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleEditExpansion(exp.id) } if (e.key === 'Escape') setEditingExpId(null) }}
+                          autoFocus
+                          className="expansion-edit-input"
+                        />
+                        <button className="btn-save-inline" onClick={() => handleEditExpansion(exp.id)}>✓</button>
+                        <button className="btn-cancel-inline" onClick={() => setEditingExpId(null)}>✕</button>
+                      </>
+                    ) : (
+                      <>
+                        <span>{exp.name}</span>
+                        <button className="btn-edit-inline" onClick={() => { setEditingExpId(exp.id); setEditExpName(exp.name) }} title="Edytuj">✎</button>
+                        <button className="btn-delete" onClick={() => handleDeleteExpansion(exp.id)} title="Usuń">×</button>
+                      </>
+                    )}
                   </li>
                 ))}
               </ul>

@@ -19,6 +19,24 @@ class GameCreate(BaseModel):
         return self
 
 
+class GameUpdate(BaseModel):
+    name: str | None = None
+    min_players: int | None = Field(default=None, ge=1)
+    max_players: int | None = Field(default=None, ge=1)
+    duration_minutes: int | None = Field(default=None, ge=1)
+    duration_type: str | None = None
+
+    @model_validator(mode="after")
+    def validate(self) -> "GameUpdate":
+        if self.min_players is not None and self.max_players is not None:
+            if self.min_players > self.max_players:
+                raise ValueError("min_players must be <= max_players")
+        if self.duration_minutes is not None and self.duration_type is not None:
+            if self.duration_type not in ("total", "per_player"):
+                raise ValueError("duration_type must be 'total' or 'per_player'")
+        return self
+
+
 class GameOut(BaseModel):
     id: int
     name: str

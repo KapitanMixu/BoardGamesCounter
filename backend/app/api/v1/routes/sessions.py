@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 
-from app.schemas.session import GameSessionCreate, GameSessionOut
+from app.schemas.session import GameSessionCreate, GameSessionOut, GameSessionUpdate
 from app.services import session as session_service
 
 router = APIRouter()
@@ -22,6 +22,14 @@ async def get_session(session_id: int):
 @router.post("/", response_model=GameSessionOut, status_code=201)
 async def create_session(data: GameSessionCreate):
     return await session_service.create_session(data)
+
+
+@router.patch("/{session_id}", response_model=GameSessionOut)
+async def update_session(session_id: int, data: GameSessionUpdate):
+    session = await session_service.update_session(session_id, data)
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    return session
 
 
 @router.delete("/{session_id}", status_code=204)

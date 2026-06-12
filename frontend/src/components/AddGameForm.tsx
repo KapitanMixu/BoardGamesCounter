@@ -11,6 +11,7 @@ export default function AddGameForm({ onAdded }: Props) {
   const [maxPlayers, setMaxPlayers] = useState(4)
   const [durationMinutes, setDurationMinutes] = useState('')
   const [durationType, setDurationType] = useState<DurationType>('total')
+  const [bggUrl, setBggUrl] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
@@ -27,6 +28,7 @@ export default function AddGameForm({ onAdded }: Props) {
         max_players: maxPlayers,
         duration_minutes: duration,
         duration_type: duration ? durationType : null,
+        bgg_url: bggUrl.trim() || null,
       })
       onAdded(game)
       setName('')
@@ -34,6 +36,7 @@ export default function AddGameForm({ onAdded }: Props) {
       setMaxPlayers(4)
       setDurationMinutes('')
       setDurationType('total')
+      setBggUrl('')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Błąd')
     } finally {
@@ -41,59 +44,70 @@ export default function AddGameForm({ onAdded }: Props) {
     }
   }
 
+  function openBggSearch() {
+    if (name.trim()) {
+      window.open(`https://boardgamegeek.com/search/boardgame?q=${encodeURIComponent(name.trim())}`, '_blank', 'noopener')
+    }
+  }
+
   return (
     <form className="add-game-form" onSubmit={handleSubmit}>
       <h3>Dodaj grę</h3>
       <div className="form-row">
-        <input
-          type="text"
-          placeholder="Nazwa gry"
-          value={name}
-          onChange={e => setName(e.target.value)}
-          required
-        />
+        <div className="bgg-search-wrapper">
+          <input
+            type="text"
+            placeholder="Nazwa gry"
+            value={name}
+            onChange={e => setName(e.target.value)}
+            required
+          />
+          <button
+            type="button"
+            className="btn-bgg-search"
+            onClick={openBggSearch}
+            disabled={!name.trim()}
+            title="Szukaj na BGG i skopiuj link"
+          >BGG ↗</button>
+        </div>
         <label>
           Min graczy
-          <input
-            type="number"
-            min={1}
-            value={minPlayers}
-            onChange={e => setMinPlayers(Number(e.target.value))}
-          />
+          <input type="number" min={1} value={minPlayers} onChange={e => setMinPlayers(Number(e.target.value))} />
         </label>
         <label>
           Max graczy
-          <input
-            type="number"
-            min={minPlayers}
-            value={maxPlayers}
-            onChange={e => setMaxPlayers(Number(e.target.value))}
-          />
+          <input type="number" min={minPlayers} value={maxPlayers} onChange={e => setMaxPlayers(Number(e.target.value))} />
         </label>
         <label>
           Czas (min)
-          <input
-            type="number"
-            min={1}
-            placeholder="opcjonalnie"
-            value={durationMinutes}
-            onChange={e => setDurationMinutes(e.target.value)}
-          />
+          <input type="number" min={1} placeholder="opcjonalnie" value={durationMinutes} onChange={e => setDurationMinutes(e.target.value)} />
         </label>
-        <label>
-          Typ czasu
-          <select
-            value={durationType}
-            onChange={e => setDurationType(e.target.value as DurationType)}
+        <div className="duration-type-toggle" aria-disabled={!durationMinutes}>
+          <button
+            type="button"
+            className={`duration-type-btn${durationType === 'total' ? ' active' : ''}`}
             disabled={!durationMinutes}
-          >
-            <option value="total">łącznie</option>
-            <option value="per_player">na gracza</option>
-          </select>
-        </label>
+            onClick={() => setDurationType('total')}
+          >łącznie</button>
+          <button
+            type="button"
+            className={`duration-type-btn${durationType === 'per_player' ? ' active' : ''}`}
+            disabled={!durationMinutes}
+            onClick={() => setDurationType('per_player')}
+          >na gracza</button>
+        </div>
         <button type="submit" disabled={submitting}>
           {submitting ? 'Dodawanie...' : 'Dodaj'}
         </button>
+      </div>
+      <div className="form-row" style={{ marginTop: '0.5rem' }}>
+        <input
+          type="url"
+          placeholder="Link BGG (wklej po wyszukaniu)"
+          value={bggUrl}
+          onChange={e => setBggUrl(e.target.value)}
+          style={{ flex: 1 }}
+        />
       </div>
       {error && <p className="form-error">{error}</p>}
     </form>

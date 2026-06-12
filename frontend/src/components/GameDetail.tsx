@@ -45,6 +45,7 @@ export default function GameDetail() {
   const [editMaxPlayers, setEditMaxPlayers] = useState('')
   const [editDurationMinutes, setEditDurationMinutes] = useState('')
   const [editDurationType, setEditDurationType] = useState<DurationType | ''>('')
+  const [editBggUrl, setEditBggUrl] = useState('')
   const [gameEditSaving, setGameEditSaving] = useState(false)
 
   // expansions
@@ -89,6 +90,7 @@ export default function GameDetail() {
     setEditMaxPlayers(String(game.max_players))
     setEditDurationMinutes(game.duration_minutes != null ? String(game.duration_minutes) : '')
     setEditDurationType(game.duration_type ?? '')
+    setEditBggUrl(game.bgg_url ?? '')
     setGameEditOpen(true)
   }
 
@@ -102,6 +104,7 @@ export default function GameDetail() {
         max_players: editMaxPlayers ? Number(editMaxPlayers) : undefined,
         duration_minutes: editDurationMinutes ? Number(editDurationMinutes) : null,
         duration_type: editDurationType || null,
+        bgg_url: editBggUrl.trim() || null,
       })
       setGame(updated)
       setGameEditOpen(false)
@@ -251,11 +254,29 @@ export default function GameDetail() {
               <label>Czas (min)
                 <input type="number" value={editDurationMinutes} onChange={e => setEditDurationMinutes(e.target.value)} min={1} style={{ width: '5rem', marginLeft: '0.5rem' }} />
               </label>
-              <select value={editDurationType} onChange={e => setEditDurationType(e.target.value as DurationType | '')}>
-                <option value="">brak</option>
-                <option value="total">łącznie</option>
-                <option value="per_player">na gracza</option>
-              </select>
+              <div className="duration-type-toggle" aria-disabled={!editDurationMinutes}>
+                <button
+                  type="button"
+                  className={`duration-type-btn${editDurationType === 'total' ? ' active' : ''}`}
+                  disabled={!editDurationMinutes}
+                  onClick={() => setEditDurationType('total')}
+                >łącznie</button>
+                <button
+                  type="button"
+                  className={`duration-type-btn${editDurationType === 'per_player' ? ' active' : ''}`}
+                  disabled={!editDurationMinutes}
+                  onClick={() => setEditDurationType('per_player')}
+                >na gracza</button>
+              </div>
+            </div>
+            <div className="form-row" style={{ marginTop: '0.5rem' }}>
+              <input
+                type="url"
+                value={editBggUrl}
+                onChange={e => setEditBggUrl(e.target.value)}
+                placeholder="Link BGG (opcjonalnie)"
+                className="session-notes-input"
+              />
             </div>
             <div className="form-row" style={{ marginTop: '0.5rem' }}>
               <button type="submit" disabled={gameEditSaving}>{gameEditSaving ? 'Zapisywanie...' : 'Zapisz'}</button>
@@ -275,6 +296,9 @@ export default function GameDetail() {
               )}
               <span>{sessions.length} rozgrywek</span>
               <span>ostatnio: {game.last_played_at ?? 'nigdy'}</span>
+              {game.bgg_url && (
+                <a href={game.bgg_url} target="_blank" rel="noopener noreferrer" className="bgg-link">BGG ↗</a>
+              )}
             </div>
           </>
         )}

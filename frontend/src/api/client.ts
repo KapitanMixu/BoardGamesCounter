@@ -47,6 +47,7 @@ export interface Game {
   max_players: number
   duration_minutes: number | null
   duration_type: DurationType | null
+  bgg_url: string | null
   times_played: number
   last_played_at: string | null
 }
@@ -57,6 +58,7 @@ export interface GameCreate {
   max_players: number
   duration_minutes?: number | null
   duration_type?: DurationType | null
+  bgg_url?: string | null
 }
 
 export interface GameUpdate {
@@ -65,6 +67,7 @@ export interface GameUpdate {
   max_players?: number
   duration_minutes?: number | null
   duration_type?: DurationType | null
+  bgg_url?: string | null
 }
 
 export interface Player {

@@ -143,6 +143,7 @@ export default function GameList() {
   const [games, setGames] = useState<Game[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [modalOpen, setModalOpen] = useState(false)
 
   useEffect(() => {
     api.games.list()
@@ -156,13 +157,25 @@ export default function GameList() {
 
   return (
     <section className="game-list">
-      <AddGameForm onAdded={game => setGames(prev => [...prev, game])} />
-      <h2>Gry ({games.length})</h2>
+      <div className="detail-card-header" style={{ marginBottom: '1rem' }}>
+        <h2>Gry ({games.length})</h2>
+        <button onClick={() => setModalOpen(true)}>+ Dodaj grę</button>
+      </div>
+
       <ul>
         {games.map(game => (
           <GameCard key={game.id} game={game} />
         ))}
       </ul>
+
+      {modalOpen && (
+        <div className="modal-overlay" onClick={e => { if (e.target === e.currentTarget) setModalOpen(false) }}>
+          <div className="modal-box">
+            <button className="modal-close" onClick={() => setModalOpen(false)}>✕</button>
+            <AddGameForm onAdded={game => { setGames(prev => [...prev, game]); setModalOpen(false) }} />
+          </div>
+        </div>
+      )}
     </section>
   )
 }

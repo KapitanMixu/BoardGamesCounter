@@ -9,6 +9,7 @@ class GameCreate(BaseModel):
     max_players: int = Field(default=4, ge=1)
     duration_minutes: int | None = Field(default=None, ge=1)
     duration_type: str | None = None
+    bgg_url: str | None = None
 
     @model_validator(mode="after")
     def validate(self) -> "GameCreate":
@@ -25,6 +26,7 @@ class GameUpdate(BaseModel):
     max_players: int | None = Field(default=None, ge=1)
     duration_minutes: int | None = Field(default=None, ge=1)
     duration_type: str | None = None
+    bgg_url: str | None = None
 
     @model_validator(mode="after")
     def validate(self) -> "GameUpdate":
@@ -44,6 +46,7 @@ class GameOut(BaseModel):
     max_players: int
     duration_minutes: int | None = None
     duration_type: str | None = None
+    bgg_url: str | None = None
     times_played: int = 0
     last_played_at: date | None = None
 

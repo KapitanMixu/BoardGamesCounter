@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import Depends, FastAPI
 from tortoise.contrib.fastapi import RegisterTortoise
 
-from app.api.v1.routes import auth, games, players, sessions, expansions
+from app.api.v1.routes import auth, games, players, sessions, expansions, bgg
 from app.auth import get_current_user
 from app.config import settings
 
@@ -29,3 +29,4 @@ app.include_router(games.router, prefix="/api/v1/games", tags=["games"], depende
 app.include_router(players.router, prefix="/api/v1/players", tags=["players"], dependencies=_protected)
 app.include_router(sessions.router, prefix="/api/v1/sessions", tags=["sessions"], dependencies=_protected)
 app.include_router(expansions.router, prefix="/api/v1/games", tags=["expansions"], dependencies=_protected)
+app.include_router(bgg.router, prefix="/api/v1/bgg", tags=["bgg"], dependencies=_protected)

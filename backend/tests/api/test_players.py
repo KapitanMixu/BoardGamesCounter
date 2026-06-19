@@ -18,6 +18,33 @@ async def test_create_player(client: AsyncClient):
     assert "id" in data
 
 
+async def test_player_list_includes_plays_and_wins(client: AsyncClient):
+    game = (await client.post("/api/v1/games/", json={"name": "Catan"})).json()["id"]
+    alice = (await client.post("/api/v1/players/", json={"name": "Alice"})).json()["id"]
+    bob = (await client.post("/api/v1/players/", json={"name": "Bob"})).json()["id"]
+
+    await client.post("/api/v1/sessions/", json={"game_id": game, "scores": [
+        {"player_id": alice, "points": 10, "winner": True},
+        {"player_id": bob, "points": 8, "winner": False},
+    ]})
+    await client.post("/api/v1/sessions/", json={"game_id": game, "scores": [
+        {"player_id": alice, "points": 5, "winner": False},
+    ]})
+
+    players = {p["name"]: p for p in (await client.get("/api/v1/players/")).json()}
+    assert players["Alice"]["total_plays"] == 2
+    assert players["Alice"]["total_wins"] == 1
+    assert players["Bob"]["total_plays"] == 1
+    assert players["Bob"]["total_wins"] == 0
+
+
+async def test_new_player_has_zero_stats(client: AsyncClient):
+    r = await client.post("/api/v1/players/", json={"name": "Fresh"})
+    data = r.json()
+    assert data["total_plays"] == 0
+    assert data["total_wins"] == 0
+
+
 async def test_get_player(client: AsyncClient):
     create = await client.post("/api/v1/players/", json={"name": "Bob"})
     player_id = create.json()["id"]

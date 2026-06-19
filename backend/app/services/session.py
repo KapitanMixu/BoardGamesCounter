@@ -1,3 +1,4 @@
+from app.models.game import Game
 from app.models.session import GameSession, Score
 from app.schemas.session import GameSessionCreate, GameSessionUpdate
 
@@ -19,7 +20,9 @@ async def create_session(data: GameSessionCreate) -> GameSession:
         name = data.name
     else:
         count = await GameSession.filter(game_id=data.game_id).count()
-        name = f"Rozgrywka#{count + 1}"
+        game = await Game.get_or_none(id=data.game_id)
+        game_name = game.name if game else f"Gra #{data.game_id}"
+        name = f"{game_name} Sesja #{count + 1}"
     session = await GameSession.create(game_id=data.game_id, name=name, notes=data.notes)
     for score_data in data.scores:
         await Score.create(session=session, **score_data.model_dump())

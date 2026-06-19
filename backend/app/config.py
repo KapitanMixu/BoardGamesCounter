@@ -8,11 +8,14 @@ class Settings(BaseSettings):
     DATABASE_URL: str = "sqlite://./db.sqlite3"
     TORTOISE_ORM: dict = {}
 
+    BGG_API_TOKEN: str = ""
+
     JWT_SECRET: str = "change-me-in-production"
     JWT_ALGORITHM: str = "HS256"
     JWT_EXPIRE_MINUTES: int = 60
     API_USERNAME: str = "admin"
     API_PASSWORD: str = "changeme"
+    INVITE_CODE: str = "change-this-invite-code"
 
     @model_validator(mode="after")
     def build_tortoise_orm(self) -> "Settings":
@@ -25,6 +28,8 @@ class Settings(BaseSettings):
                         "app.models.player",
                         "app.models.session",
                         "app.models.expansion",
+                        "app.models.wishlist",
+                        "app.models.user",
                         "aerich.models",
                     ],
                     "default_connection": "default",

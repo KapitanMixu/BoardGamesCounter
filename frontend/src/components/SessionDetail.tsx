@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
-import { api, type GameSession, type Game } from '../api/client'
+import { api, isAdmin, type GameSession, type Game } from '../api/client'
 
 export default function SessionDetail() {
   const { id } = useParams<{ id: string }>()
@@ -92,20 +92,24 @@ export default function SessionDetail() {
           </form>
         ) : (
           <>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              <h2>{session.name ?? `Sesja #${session.id}`}</h2>
-              <button className="btn-edit-inline" onClick={openEdit} title="Edytuj">✎</button>
+            <div className="session-detail-head">
+              {game?.thumbnail_url
+                ? <img src={game.thumbnail_url} alt="" className="game-thumb game-thumb-lg" />
+                : <span className="game-thumb game-thumb-lg game-thumb-placeholder">{(game?.name ?? '?').charAt(0).toUpperCase()}</span>}
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <h2 style={{ marginBottom: '0.4rem' }}>{session.name ?? `Sesja #${session.id}`}</h2>
+                  {isAdmin() && <button className="btn-edit-inline" onClick={openEdit} title="Edytuj">✎</button>}
+                </div>
+                <div className="game-meta">
+                  {game
+                    ? <Link to={`/games/${game.id}`} className="game-chip">🎲 {game.name}</Link>
+                    : <span className="game-chip">🎲 Gra #{session.game_id}</span>}
+                  <span>📅 {new Date(session.played_at).toLocaleDateString('pl-PL')}</span>
+                </div>
+              </div>
             </div>
-            <div className="game-meta">
-              <span>
-                Gra:{' '}
-                {game
-                  ? <Link to={`/games/${game.id}`} style={{ color: '#60a5fa' }}>{game.name}</Link>
-                  : `#${session.game_id}`}
-              </span>
-              <span>{session.played_at}</span>
-            </div>
-            {session.notes && <p className="session-notes" style={{ marginTop: '0.5rem' }}>{session.notes}</p>}
+            {session.notes && <p className="session-notes" style={{ marginTop: '0.75rem' }}>{session.notes}</p>}
           </>
         )}
       </div>
@@ -119,23 +123,22 @@ export default function SessionDetail() {
               .sort((a, b) => (b.points ?? 0) - (a.points ?? 0))
               .map(score => (
                 <li key={score.id} className={`score-item${score.winner ? ' winner' : ''}`}>
-                  <span>{score.player.name}</span>
+                  <Link to={`/players/${score.player.id}`} className="bar-label">{score.player.name}</Link>
                   {score.points != null && <span>{score.points} pkt</span>}
-                  {score.winner && <span className="winner-badge">Zwycięzca</span>}
+                  {score.winner && <span className="winner-crown" title="Zwycięzca">👑</span>}
                 </li>
               ))}
           </ul>
         </div>
       )}
 
-      <div style={{ marginTop: '1.5rem' }}>
-        <button
-          onClick={handleDelete}
-          style={{ background: 'none', border: '1px solid #ef4444', color: '#ef4444', borderRadius: '6px', padding: '0.4rem 1rem', cursor: 'pointer', fontSize: '0.875rem' }}
-        >
-          Usuń sesję
-        </button>
-      </div>
+      {isAdmin() && (
+        <div style={{ marginTop: '1.5rem' }}>
+          <button className="btn-danger" onClick={handleDelete}>
+            Usuń sesję
+          </button>
+        </div>
+      )}
     </section>
   )
 }

@@ -76,14 +76,14 @@ async def test_session_auto_name_first(client: AsyncClient):
     game_id = await _make_game(client)
     r = await client.post("/api/v1/sessions/", json={"game_id": game_id})
     assert r.status_code == 201
-    assert r.json()["name"] == "Rozgrywka#1"
+    assert r.json()["name"] == "Catan Sesja #1"
 
 
 async def test_session_auto_name_increments(client: AsyncClient):
     game_id = await _make_game(client)
     await client.post("/api/v1/sessions/", json={"game_id": game_id})
     r = await client.post("/api/v1/sessions/", json={"game_id": game_id})
-    assert r.json()["name"] == "Rozgrywka#2"
+    assert r.json()["name"] == "Catan Sesja #2"
 
 
 async def test_session_custom_name_overrides_auto(client: AsyncClient):
@@ -100,4 +100,4 @@ async def test_session_auto_name_isolated_per_game(client: AsyncClient):
     await client.post("/api/v1/sessions/", json={"game_id": g1})
 
     r = await client.post("/api/v1/sessions/", json={"game_id": g2})
-    assert r.json()["name"] == "Rozgrywka#1"
+    assert r.json()["name"] == "Terraforming Mars Sesja #1"

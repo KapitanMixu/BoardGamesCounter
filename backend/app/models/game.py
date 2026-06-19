@@ -10,6 +10,7 @@ class Game(Model):
     duration_minutes = fields.IntField(null=True)
     duration_type = fields.CharField(max_length=20, null=True)  # "total" | "per_player"
     bgg_url = fields.CharField(max_length=500, null=True)
+    thumbnail_url = fields.CharField(max_length=500, null=True)
     created_at = fields.DatetimeField(auto_now_add=True)
 
     sessions: fields.ReverseRelation["GameSession"]

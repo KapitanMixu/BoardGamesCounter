@@ -1,4 +1,5 @@
 from contextlib import asynccontextmanager
+from types import SimpleNamespace
 
 import pytest
 from httpx import AsyncClient, ASGITransport
@@ -7,7 +8,9 @@ from tortoise import Tortoise
 from app.auth import get_current_user
 from app.main import app
 
-app.dependency_overrides[get_current_user] = lambda: "testuser"
+# default: act as admin so existing write tests pass without real auth
+_FAKE_ADMIN = SimpleNamespace(username="testadmin", role="admin")
+app.dependency_overrides[get_current_user] = lambda: _FAKE_ADMIN
 
 TEST_DB_URL = "sqlite://:memory:"
 
@@ -29,7 +32,7 @@ def anyio_backend():
 async def init_db():
     await Tortoise.init(
         db_url=TEST_DB_URL,
-        modules={"models": ["app.models.game", "app.models.player", "app.models.session", "app.models.expansion"]},
+        modules={"models": ["app.models.game", "app.models.player", "app.models.session", "app.models.expansion", "app.models.wishlist", "app.models.user"]},
     )
     await Tortoise.generate_schemas()
     yield
@@ -44,10 +47,14 @@ async def clean_db(init_db):
     from app.models.game import Game
 
     from app.models.expansion import Expansion
+    from app.models.wishlist import WishlistItem
+    from app.models.user import User
     await Score.all().delete()
     await GameSession.all().delete()
     await Player.all().delete()
     await Expansion.all().delete()
+    await WishlistItem.all().delete()
+    await User.all().delete()
     await Game.all().delete()
 
 

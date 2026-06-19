@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { api, type Game, type GameSession, type Expansion, type Player, type DurationType } from '../api/client'
+import { api, isAdmin, type Game, type GameSession, type Expansion, type Player, type DurationType } from '../api/client'
 
 interface PlayerStat {
+  id: number
   name: string
   plays: number
   wins: number
@@ -13,7 +14,7 @@ function computeStats(sessions: GameSession[]): PlayerStat[] {
   for (const s of sessions) {
     for (const score of s.scores) {
       const pid = score.player.id
-      if (!map[pid]) map[pid] = { name: score.player.name, plays: 0, wins: 0 }
+      if (!map[pid]) map[pid] = { id: pid, name: score.player.name, plays: 0, wins: 0 }
       map[pid].plays++
       if (score.winner) map[pid].wins++
     }
@@ -30,6 +31,7 @@ interface ScoreEntry {
 export default function GameDetail() {
   const { id } = useParams<{ id: string }>()
   const gameId = Number(id)
+  const admin = isAdmin()
 
   const [game, setGame] = useState<Game | null>(null)
   const [sessions, setSessions] = useState<GameSession[]>([])
@@ -286,18 +288,21 @@ export default function GameDetail() {
         ) : (
           <>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              {game.thumbnail_url
+                ? <img src={game.thumbnail_url} alt="" className="game-thumb game-thumb-lg" />
+                : <span className="game-thumb game-thumb-lg game-thumb-placeholder">{game.name.charAt(0).toUpperCase()}</span>}
               <h2>{game.name}</h2>
-              <button className="btn-edit-inline" onClick={openGameEdit} title="Edytuj grę">✎</button>
+              {admin && <button className="btn-edit-inline" onClick={openGameEdit} title="Edytuj grę">✎</button>}
             </div>
             <div className="game-meta">
-              <span>{game.min_players}–{game.max_players} graczy</span>
+              <span>👥 {game.min_players}–{game.max_players} graczy</span>
               {game.duration_minutes && game.duration_type && (
-                <span>{game.duration_minutes} min{game.duration_type === 'per_player' ? '/gracza' : ''}</span>
+                <span>⏱ {game.duration_minutes} min{game.duration_type === 'per_player' ? '/gracza' : ''}</span>
               )}
-              <span>{sessions.length} rozgrywek</span>
-              <span>ostatnio: {game.last_played_at ?? 'nigdy'}</span>
+              <span>🎲 {sessions.length} {sessions.length === 1 ? 'rozgrywka' : 'rozgrywek'}</span>
+              <span>📅 {game.last_played_at ?? 'nigdy'}</span>
               {game.bgg_url && (
-                <a href={game.bgg_url} target="_blank" rel="noopener noreferrer" className="bgg-link">BGG ↗</a>
+                <a href={game.bgg_url} target="_blank" rel="noopener noreferrer" className="btn-bgg">BGG ↗</a>
               )}
             </div>
           </>
@@ -327,15 +332,15 @@ export default function GameDetail() {
                 ) : (
                   <>
                     <span>{exp.name}</span>
-                    <button className="btn-edit-inline" onClick={() => openExpEdit(exp)} title="Edytuj">✎</button>
-                    <button className="btn-delete" onClick={() => handleDeleteExpansion(exp.id)}>×</button>
+                    {admin && <button className="btn-edit-inline" onClick={() => openExpEdit(exp)} title="Edytuj">✎</button>}
+                    {admin && <button className="btn-delete" onClick={() => handleDeleteExpansion(exp.id)}>×</button>}
                   </>
                 )}
               </li>
             ))}
           </ul>
         )}
-        {addExpOpen ? (
+        {!admin ? null : addExpOpen ? (
           <form className="expansion-add-form" onSubmit={handleAddExpansion}>
             <input
               type="text"
@@ -362,8 +367,8 @@ export default function GameDetail() {
             </thead>
             <tbody>
               {stats.map(s => (
-                <tr key={s.name}>
-                  <td>{s.name}</td>
+                <tr key={s.id}>
+                  <td><Link to={`/players/${s.id}`} className="bar-label">{s.name}</Link></td>
                   <td>{s.plays}</td>
                   <td>{s.wins}</td>
                   <td>{Math.round((s.wins / s.plays) * 100)}%</td>
@@ -378,8 +383,8 @@ export default function GameDetail() {
       <div className="detail-card">
         <div className="detail-card-header">
           <h3>Historia rozgrywek ({sessions.length})</h3>
-          {!sessionFormOpen && (
-            <button onClick={() => { setSessionFormOpen(true); setSessionName(`Rozgrywka#${sessions.length + 1}`) }}>+ Dodaj rozgrywkę</button>
+          {admin && !sessionFormOpen && (
+            <button onClick={() => { setSessionFormOpen(true); setSessionName(`${game.name} Sesja #${sessions.length + 1}`) }}>+ Dodaj rozgrywkę</button>
           )}
         </div>
 
@@ -503,7 +508,7 @@ export default function GameDetail() {
                     <div className="session-history-date">
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                         <span className="session-name">{s.name ?? `Rozgrywka#${sessions.length - sessions.indexOf(s)}`}</span>
-                        <button className="btn-edit-inline" onClick={() => openSessionEdit(s)} title="Edytuj">✎</button>
+                        {admin && <button className="btn-edit-inline" onClick={() => openSessionEdit(s)} title="Edytuj">✎</button>}
                       </div>
                       <span className="session-date-sub">{s.played_at}</span>
                     </div>
@@ -512,9 +517,9 @@ export default function GameDetail() {
                       <ul className="score-list">
                         {s.scores.map(score => (
                           <li key={score.id} className={`score-item${score.winner ? ' winner' : ''}`}>
-                            <span>{score.player.name}</span>
+                            <Link to={`/players/${score.player.id}`} className="bar-label">{score.player.name}</Link>
                             {score.points != null && <span>{score.points} pkt</span>}
-                            {score.winner && <span className="winner-badge">Zwycięzca</span>}
+                            {score.winner && <span className="winner-crown" title="Zwycięzca">👑</span>}
                           </li>
                         ))}
                       </ul>

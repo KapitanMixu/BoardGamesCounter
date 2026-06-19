@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 
-from app.schemas.player import PlayerCreate, PlayerOut
+from app.schemas.player import PlayerCreate, PlayerOut, PlayerStatsOut
 from app.services import player as player_service
 
 router = APIRouter()
@@ -9,6 +9,14 @@ router = APIRouter()
 @router.get("/", response_model=list[PlayerOut])
 async def list_players():
     return await player_service.get_all_players()
+
+
+@router.get("/{player_id}/stats", response_model=PlayerStatsOut)
+async def get_player_stats(player_id: int):
+    stats = await player_service.get_player_stats(player_id)
+    if not stats:
+        raise HTTPException(status_code=404, detail="Player not found")
+    return stats
 
 
 @router.get("/{player_id}", response_model=PlayerOut)

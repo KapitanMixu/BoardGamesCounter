@@ -19,6 +19,12 @@ async def get_game(game_id: int):
     return game
 
 
+@router.post("/backfill-thumbnails")
+async def backfill_thumbnails():
+    updated = await game_service.backfill_thumbnails()
+    return {"updated": updated}
+
+
 @router.post("/", response_model=GameOut, status_code=201)
 async def create_game(data: GameCreate):
     return await game_service.create_game(data)

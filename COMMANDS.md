@@ -4,6 +4,69 @@ All commands run from repo root unless noted.
 
 ---
 
+## Uruchomienie aplikacji (Docker Compose)
+
+**Start (build + uruchom backend + PostgreSQL + frontend):**
+```powershell
+docker compose up --build
+```
+
+Frontend: http://localhost:5173  
+API: http://localhost:8000  
+Docs: http://localhost:8000/docs
+
+**Start w tle:**
+```powershell
+docker compose up --build -d
+```
+
+**Restart po zmianie kodu:**
+```powershell
+docker compose up --build backend
+```
+
+**Stop:**
+```powershell
+docker compose down
+```
+
+**Stop + usuń dane (volumes):**
+```powershell
+docker compose down -v
+```
+
+**Logi backendu:**
+```powershell
+docker compose logs -f backend
+```
+
+---
+
+## Docker (standalone — SQLite)
+
+**Build image:**
+```powershell
+docker build -t boardgames-backend ./backend
+```
+
+**Run container:**
+```powershell
+docker run -d --name boardgames -p 8000:8000 boardgames-backend
+```
+
+**Logs:**
+```powershell
+docker logs boardgames
+docker logs -f boardgames   # follow
+```
+
+**Stop / remove:**
+```powershell
+docker rm -f boardgames
+```
+
+---
+
 ## Local dev (venv)
 
 **Activate venv** (once per shell session):
@@ -59,71 +122,6 @@ cd backend
 ```powershell
 cd backend
 ..\.venv\Scripts\aerich.exe history
-```
-
----
-
-## Docker (standalone — SQLite)
-
-**Build image:**
-```powershell
-docker build -t boardgames-backend ./backend
-```
-
-**Run container:**
-```powershell
-docker run -d --name boardgames -p 8000:8000 boardgames-backend
-```
-
-**Logs:**
-```powershell
-docker logs boardgames
-docker logs -f boardgames   # follow
-```
-
-API: http://localhost:8000  
-Docs: http://localhost:8000/docs
-
-**Stop / remove:**
-```powershell
-docker rm -f boardgames
-```
-
----
-
-## Docker Compose (local dev z PostgreSQL)
-
-**Start (build + run):**
-```powershell
-docker compose up --build
-```
-
-API: http://localhost:8000  
-Docs: http://localhost:8000/docs
-
-**Start w tle:**
-```powershell
-docker compose up --build -d
-```
-
-**Logi backendu:**
-```powershell
-docker compose logs -f backend
-```
-
-**Stop:**
-```powershell
-docker compose down
-```
-
-**Stop + usuń dane (volumes):**
-```powershell
-docker compose down -v
-```
-
-**Restart tylko backendu (po zmianie kodu):**
-```powershell
-docker compose up --build backend
 ```
 
 ---

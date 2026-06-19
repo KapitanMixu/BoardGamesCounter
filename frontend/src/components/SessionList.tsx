@@ -1,11 +1,28 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { api, type GameSession, type Game, type Player } from '../api/client'
+import { api, isAdmin, type GameSession, type Game, type Player } from '../api/client'
 
 interface ScoreEntry {
   player_id: number
   points: string
   winner: boolean
+}
+
+type SortKey = 'date' | 'game'
+
+function sortSessions(sessions: GameSession[], key: SortKey, gamesMap: Record<number, Game>): GameSession[] {
+  const sorted = sessions.slice()
+  if (key === 'game') {
+    sorted.sort((a, b) => {
+      const an = gamesMap[a.game_id]?.name ?? ''
+      const bn = gamesMap[b.game_id]?.name ?? ''
+      return an.localeCompare(bn, 'pl') || b.played_at.localeCompare(a.played_at)
+    })
+  } else {
+    // najnowsze pierwsze
+    sorted.sort((a, b) => b.played_at.localeCompare(a.played_at))
+  }
+  return sorted
 }
 
 export default function SessionList() {
@@ -25,6 +42,8 @@ export default function SessionList() {
   const [formError, setFormError] = useState<string | null>(null)
   const [newPlayerName, setNewPlayerName] = useState('')
   const [addingPlayer, setAddingPlayer] = useState(false)
+  const [sortKey, setSortKey] = useState<SortKey>('date')
+  const [search, setSearch] = useState('')
 
   useEffect(() => {
     Promise.all([api.sessions.list(), api.games.list(), api.players.list()])
@@ -105,7 +124,25 @@ export default function SessionList() {
     <section className="session-list">
       <div className="detail-card-header" style={{ marginBottom: '1rem' }}>
         <h2>Sesje ({sessions.length})</h2>
-        {!formOpen && <button onClick={openForm}>+ Dodaj sesję</button>}
+        {isAdmin() && !formOpen && <button onClick={openForm}>+ Dodaj sesję</button>}
+      </div>
+
+      <input
+        type="search"
+        className="search-input"
+        placeholder="Szukaj sesji, gry lub gracza..."
+        value={search}
+        onChange={e => setSearch(e.target.value)}
+      />
+
+      <div className="filter-tabs">
+        <label className="sort-control">
+          Sortuj:
+          <select value={sortKey} onChange={e => setSortKey(e.target.value as SortKey)}>
+            <option value="date">Data (najnowsze)</option>
+            <option value="game">Gra (A-Z)</option>
+          </select>
+        </label>
       </div>
 
       {formOpen && (
@@ -119,7 +156,8 @@ export default function SessionList() {
                 const id = Number(e.target.value)
                 setSelectedGameId(id)
                 const gameSessions = sessions.filter(s => s.game_id === id)
-                setSessionName(`Rozgrywka#${gameSessions.length + 1}`)
+                const gameName = gamesMap[id]?.name ?? `Gra #${id}`
+                setSessionName(`${gameName} Sesja #${gameSessions.length + 1}`)
               }}
               className="session-notes-input"
               style={{ marginBottom: '0.75rem' }}
@@ -209,27 +247,41 @@ export default function SessionList() {
       )}
 
       <ul>
-        {sessions.map(session => (
+        {sortSessions(
+          sessions.filter(s => {
+            const q = search.trim().toLowerCase()
+            if (!q) return true
+            const name = (s.name ?? '').toLowerCase()
+            const gameName = (gamesMap[s.game_id]?.name ?? '').toLowerCase()
+            const playerMatch = s.scores.some(sc => sc.player.name.toLowerCase().includes(q))
+            return name.includes(q) || gameName.includes(q) || playerMatch
+          }),
+          sortKey,
+          gamesMap,
+        ).map(session => (
           <li key={session.id} className="session-card">
             <div className="session-header">
-              <div>
-                <Link to={`/sessions/${session.id}`} className="session-name">{session.name ?? `Sesja #${session.id}`}</Link>
-                <span className="session-game-link">
+              <div className="session-header-main">
+                {gamesMap[session.game_id]?.thumbnail_url
+                  ? <img src={gamesMap[session.game_id].thumbnail_url!} alt="" className="game-thumb session-thumb" />
+                  : <span className="game-thumb session-thumb game-thumb-placeholder">{(gamesMap[session.game_id]?.name ?? '?').charAt(0).toUpperCase()}</span>}
+                <div>
+                  <Link to={`/sessions/${session.id}`} className="session-name">{session.name ?? `Sesja #${session.id}`}</Link>
                   {gamesMap[session.game_id]
-                    ? <Link to={`/games/${session.game_id}`}>{gamesMap[session.game_id].name}</Link>
-                    : `Gra #${session.game_id}`}
-                </span>
+                    ? <Link to={`/games/${session.game_id}`} className="game-chip">🎲 {gamesMap[session.game_id].name}</Link>
+                    : <span className="game-chip">🎲 Gra #{session.game_id}</span>}
+                </div>
               </div>
-              <span className="session-date">{session.played_at}</span>
+              <span className="session-date">{new Date(session.played_at).toLocaleDateString('pl-PL')}</span>
             </div>
             {session.notes && <p className="session-notes">{session.notes}</p>}
             {session.scores.length > 0 && (
               <ul className="score-list">
                 {session.scores.map(score => (
                   <li key={score.id} className={`score-item${score.winner ? ' winner' : ''}`}>
-                    <span>{score.player.name}</span>
+                    <Link to={`/players/${score.player.id}`} className="bar-label">{score.player.name}</Link>
                     {score.points != null && <span>{score.points} pkt</span>}
-                    {score.winner && <span className="winner-badge">Zwycięzca</span>}
+                    {score.winner && <span className="winner-crown" title="Zwycięzca">👑</span>}
                   </li>
                 ))}
               </ul>

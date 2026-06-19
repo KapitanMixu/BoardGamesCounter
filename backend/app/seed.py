@@ -1,14 +1,33 @@
 import asyncio
 from tortoise import Tortoise
 
+from app.auth import hash_password
 from app.config import settings
 from app.models.game import Game
 from app.models.player import Player
 from app.models.session import GameSession, Score
+from app.models.user import User
+
+
+async def ensure_admin():
+    """Create/refresh the admin account from env (idempotent)."""
+    admin = await User.get_or_none(username=settings.API_USERNAME)
+    if admin is None:
+        await User.create(
+            username=settings.API_USERNAME,
+            password_hash=hash_password(settings.API_PASSWORD),
+            role="admin",
+        )
+        print(f"Seed: created admin '{settings.API_USERNAME}'.")
+    elif admin.role != "admin":
+        admin.role = "admin"
+        await admin.save(update_fields=["role"])
 
 
 async def seed():
     await Tortoise.init(config=settings.TORTOISE_ORM)
+
+    await ensure_admin()
 
     if await Game.exists():
         print("Seed: data already present, skipping.")

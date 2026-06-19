@@ -47,6 +47,7 @@ class GameOut(BaseModel):
     duration_minutes: int | None = None
     duration_type: str | None = None
     bgg_url: str | None = None
+    thumbnail_url: str | None = None
     times_played: int = 0
     last_played_at: date | None = None
 

@@ -19,8 +19,9 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def build_tortoise_orm(self) -> "Settings":
+        db_url = self.DATABASE_URL.replace("postgresql://", "postgres://", 1)
         self.TORTOISE_ORM = {
-            "connections": {"default": self.DATABASE_URL},
+            "connections": {"default": db_url},
             "apps": {
                 "models": {
                     "models": [

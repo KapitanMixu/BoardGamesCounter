@@ -1,6 +1,8 @@
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import Depends, FastAPI
+from fastapi.staticfiles import StaticFiles
 from tortoise.contrib.fastapi import RegisterTortoise
 
 from app.api.v1.routes import auth, games, players, sessions, expansions, bgg, wishlist
@@ -31,3 +33,7 @@ app.include_router(sessions.router, prefix="/api/v1/sessions", tags=["sessions"]
 app.include_router(expansions.router, prefix="/api/v1/games", tags=["expansions"], dependencies=_protected)
 app.include_router(bgg.router, prefix="/api/v1/bgg", tags=["bgg"], dependencies=_protected)
 app.include_router(wishlist.router, prefix="/api/v1/wishlist", tags=["wishlist"], dependencies=_protected)
+
+_spa_dir = Path(__file__).parent.parent.parent / "frontend_dist"
+if _spa_dir.is_dir():
+    app.mount("/", StaticFiles(directory=str(_spa_dir), html=True), name="spa")

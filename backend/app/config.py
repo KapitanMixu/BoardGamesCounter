@@ -1,5 +1,33 @@
+from urllib.parse import urlparse
+
 from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+def _parse_db_connection(database_url: str) -> str | dict:
+    if database_url.startswith("sqlite"):
+        return database_url
+
+    use_ssl = "sslmode=require" in database_url or "ssl=" in database_url
+    clean = (
+        database_url
+        .replace("postgresql://", "postgres://", 1)
+        .split("?")[0]
+    )
+    p = urlparse(clean)
+    creds: dict = {
+        "host": p.hostname,
+        "port": p.port or 5432,
+        "user": p.username,
+        "password": p.password,
+        "database": p.path.lstrip("/"),
+    }
+    if use_ssl:
+        creds["ssl"] = True
+    return {
+        "engine": "tortoise.backends.asyncpg",
+        "credentials": creds,
+    }
 
 
 class Settings(BaseSettings):
@@ -19,13 +47,8 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def build_tortoise_orm(self) -> "Settings":
-        db_url = (
-            self.DATABASE_URL
-            .replace("postgresql://", "postgres://", 1)
-            .replace("sslmode=require", "ssl=true")
-        )
         self.TORTOISE_ORM = {
-            "connections": {"default": db_url},
+            "connections": {"default": _parse_db_connection(self.DATABASE_URL)},
             "apps": {
                 "models": {
                     "models": [

@@ -14,8 +14,7 @@ from app.config import settings
 async def lifespan(app: FastAPI):
     async with RegisterTortoise(
         app,
-        db_url=settings.DATABASE_URL.replace("postgresql://", "postgres://", 1).replace("sslmode=require", "ssl=true"),
-        modules={"models": ["app.models.game", "app.models.player", "app.models.session", "app.models.expansion", "app.models.wishlist", "app.models.user"]},
+        config=settings.TORTOISE_ORM,
         generate_schemas=False,
         add_exception_handlers=True,
     ):

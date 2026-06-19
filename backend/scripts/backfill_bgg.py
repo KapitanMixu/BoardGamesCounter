@@ -87,12 +87,15 @@ async def search_bgg(client: httpx.AsyncClient, name: str) -> str | None:
     root = ET.fromstring(resp.text)
     q = name.strip().lower()
     best = None
-    best_rank = 99
+    best_key = (99, -1)  # (rank, year) — lower rank wins, then NEWER year
     for item in root.findall("item"):
-        primary = item.find("name[@type='primary']")
-        if primary is None:
+        # search results may carry the matched name as primary OR alternate
+        name_el = item.find("name[@type='primary']")
+        if name_el is None:
+            name_el = item.find("name")
+        if name_el is None:
             continue
-        n = primary.get("value", "").lower()
+        n = name_el.get("value", "").lower()
         if n == q:
             rank = 0
         elif n.startswith(q):
@@ -101,8 +104,11 @@ async def search_bgg(client: httpx.AsyncClient, name: str) -> str | None:
             rank = 2
         else:
             rank = 3
-        if rank < best_rank:
-            best_rank = rank
+        year_el = item.find("yearpublished")
+        year = int(year_el.get("value")) if year_el is not None and year_el.get("value") else 0
+        key = (rank, -year)  # prefer newer edition on tie
+        if key < best_key:
+            best_key = key
             best = item.get("id")
     return best
 

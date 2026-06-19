@@ -33,6 +33,6 @@ app.include_router(expansions.router, prefix="/api/v1/games", tags=["expansions"
 app.include_router(bgg.router, prefix="/api/v1/bgg", tags=["bgg"], dependencies=_protected)
 app.include_router(wishlist.router, prefix="/api/v1/wishlist", tags=["wishlist"], dependencies=_protected)
 
-_spa_dir = Path(__file__).parent.parent.parent / "frontend_dist"
+_spa_dir = Path(__file__).parent.parent / "frontend_dist"
 if _spa_dir.is_dir():
     app.mount("/", StaticFiles(directory=str(_spa_dir), html=True), name="spa")

@@ -22,7 +22,7 @@ class Settings(BaseSettings):
         db_url = (
             self.DATABASE_URL
             .replace("postgresql://", "postgres://", 1)
-            .replace("sslmode=require", "ssl=require")
+            .replace("sslmode=require", "ssl=true")
         )
         self.TORTOISE_ORM = {
             "connections": {"default": db_url},

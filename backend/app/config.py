@@ -1,8 +1,4 @@
-from urllib.parse import urlparse, uses_netloc
-
-for _scheme in ("postgres", "postgresql"):
-    if _scheme not in uses_netloc:
-        uses_netloc.append(_scheme)
+import re
 
 from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -13,21 +9,22 @@ def _parse_db_connection(database_url: str) -> str | dict:
         return database_url
 
     use_ssl = "sslmode=require" in database_url or "ssl=" in database_url
-    clean = (
-        database_url
-        .replace("postgresql://", "postgres://", 1)
-        .split("?")[0]
+    m = re.match(
+        r"postgresql?://(?P<user>[^:@]+)(?::(?P<password>[^@]*))?@"
+        r"(?P<host>[^/:]+)(?::(?P<port>\d+))?/(?P<db>[^?]+)",
+        database_url,
     )
-    p = urlparse(clean)
+    if not m:
+        raise ValueError(f"Cannot parse DATABASE_URL: {database_url!r}")
     creds: dict = {
-        "host": p.hostname,
-        "port": p.port or 5432,
-        "user": p.username,
-        "password": p.password,
-        "database": p.path.lstrip("/"),
+        "host": m.group("host"),
+        "port": int(m.group("port") or 5432),
+        "user": m.group("user"),
+        "password": m.group("password") or "",
+        "database": m.group("db"),
     }
     if use_ssl:
-        creds["ssl"] = True
+        creds["ssl"] = "require"
     return {
         "engine": "tortoise.backends.asyncpg",
         "credentials": creds,

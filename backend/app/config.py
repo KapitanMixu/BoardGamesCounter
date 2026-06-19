@@ -1,4 +1,8 @@
-from urllib.parse import urlparse
+from urllib.parse import urlparse, uses_netloc
+
+for _scheme in ("postgres", "postgresql"):
+    if _scheme not in uses_netloc:
+        uses_netloc.append(_scheme)
 
 from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict

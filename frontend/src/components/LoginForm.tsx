@@ -38,7 +38,7 @@ export default function LoginForm({ onLogin }: Props) {
 
   return (
     <div className="login-wrapper">
-      <h1>Board Games Counter</h1>
+      <h1>Gry Mixa</h1>
       <form className="login-form" onSubmit={handleSubmit}>
         <div className="auth-tabs">
           <button

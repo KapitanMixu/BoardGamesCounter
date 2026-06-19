@@ -40,7 +40,7 @@ export default function PlayerPicker({ onLinked }: Props) {
 
   return (
     <div className="login-wrapper">
-      <h1>Board Games Counter</h1>
+      <h1>Gry Mixa</h1>
       <form className="login-form" onSubmit={handleSubmit}>
         <h2 style={{ marginBottom: '1rem', fontSize: '1.1rem', color: 'var(--color-text-muted)' }}>
           Kim jesteś?

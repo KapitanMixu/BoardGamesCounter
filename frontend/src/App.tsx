@@ -39,7 +39,7 @@ export default function App() {
     <BrowserRouter>
       <div className="app">
         <header className="app-header">
-          <h1>Board Games Counter</h1>
+          <h1>Gry Mixa</h1>
           <nav className="app-nav">
             <NavLink to="/games" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>Gry</NavLink>
             <NavLink to="/players" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>Gracze</NavLink>
